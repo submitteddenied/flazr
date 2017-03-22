@@ -23,20 +23,26 @@ import com.flazr.util.ValueToEnum;
 
 public class AudioTag {
 
-    private Format format;
-    private SampleRate sampleRate;
-    private boolean sampleSize16Bit;
-    private boolean stereo;    
+    private final CodecType codecType;
+    private final SampleRate sampleRate;
+    private final boolean sampleSize16Bit;
+    private final boolean stereo;
 
-    public AudioTag(byte byteValue) {
-        format = Format.valueToEnum(byteValue >> 4);
-        sampleRate = SampleRate.valueToEnum((0x0F & byteValue) >> 2);
-        sampleSize16Bit = (0x02 & byteValue) > 0;
-        stereo = (0x01 & byteValue) > 0;
+    public AudioTag(final byte byteValue) {
+        final int unsigned = 0xFF & byteValue;
+        codecType = CodecType.valueToEnum(unsigned >> 4);
+        sampleSize16Bit = (0x02 & unsigned) > 0;
+        if(codecType == CodecType.AAC) {
+            sampleRate = SampleRate.KHZ_44;
+            stereo = true;
+            return;
+        }
+        sampleRate = SampleRate.valueToEnum((0x0F & unsigned) >> 2);
+        stereo = (0x01 & unsigned) > 0;
     }
 
-    public Format getFormat() {
-        return format;
+    public CodecType getCodecType() {
+        return codecType;
     }
 
     public SampleRate getSampleRate() {
@@ -51,7 +57,7 @@ public class AudioTag {
         return stereo;
     }
 
-    public static enum Format implements ValueToEnum.IntValue {
+    public static enum CodecType implements ValueToEnum.IntValue {
 
         ADPCM(1),
         MP3(2),
@@ -69,7 +75,7 @@ public class AudioTag {
 
         private final int value;
 
-        Format(final int value) {
+        CodecType(final int value) {
             this.value = value;
         }
 
@@ -78,9 +84,9 @@ public class AudioTag {
             return value;
         }
 
-        private static final ValueToEnum<Format> converter = new ValueToEnum<Format>(Format.values());
+        private static final ValueToEnum<CodecType> converter = new ValueToEnum<CodecType>(CodecType.values());
 
-        public static Format valueToEnum(final int value) {
+        public static CodecType valueToEnum(final int value) {
             return converter.valueToEnum(value);
         }
 
@@ -88,10 +94,10 @@ public class AudioTag {
 
     public static enum SampleRate implements ValueToEnum.IntValue {
 
-        KHZ_5_5(0),
+        KHZ_5(0),
         KHZ_11(1),
         KHZ_22(2),
-        KHZ_33(3);
+        KHZ_44(3);
 
         private final int value;
 
@@ -115,7 +121,7 @@ public class AudioTag {
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        sb.append("[format: ").append(format);
+        sb.append("[format: ").append(codecType);
         sb.append(", sampleRate: ").append(sampleRate);
         sb.append(", sampleSize16bit: ").append(sampleSize16Bit);
         sb.append(", stereo: ").append(stereo);

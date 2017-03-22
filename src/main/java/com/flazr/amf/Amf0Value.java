@@ -24,7 +24,6 @@ import com.flazr.util.ValueToEnum;
 import java.util.Arrays;
 import static com.flazr.amf.Amf0Value.Type.*;
 import java.util.Date;
-import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -84,7 +83,7 @@ public class Amf0Value {
                 return MAP;
             } else if (value instanceof Object[]) {
                 return ARRAY;
-            } else if (value instanceof Date) {
+            } else if(value instanceof Date) {
                 return DATE;
             } else {
                 throw new RuntimeException("unexpected type: " + value.getClass());
@@ -92,10 +91,10 @@ public class Amf0Value {
         }
 
     }
-
+    
     private static final byte BOOLEAN_TRUE = 0x01;
     private static final byte BOOLEAN_FALSE = 0x00;
-    private static final byte[] OBJECT_END_MARKER = new byte[]{0x00, 0x00, 0x09};
+    private static final byte[] OBJECT_END_MARKER = new byte[]{0x00, 0x00, 0x09};    
 
     public static void encode(final ChannelBuffer out, final Object value) {
         final Type type = Type.getType(value);
@@ -111,7 +110,7 @@ public class Amf0Value {
                     out.writeLong(Double.doubleToLongBits(Double.valueOf(value.toString())));
                 }
                 return;
-            case BOOLEAN:
+            case BOOLEAN:                
                 out.writeByte((Boolean) value ? BOOLEAN_TRUE : BOOLEAN_FALSE);
                 return;
             case STRING:
@@ -138,13 +137,9 @@ public class Amf0Value {
                 }
                 return;
             case DATE:
-                //something to encode date
-                Calendar c = Calendar.getInstance();
-                c.setTime((Date) value);
-                long longValue = c.getTimeInMillis();
-                int timeZoneOffset = (c.get(Calendar.ZONE_OFFSET) + c.get(Calendar.DST_OFFSET)) / (60 * 1000);
-                out.writeLong(longValue);
-                out.writeShort((short)timeZoneOffset);
+                final long time = ((Date) value).getTime();
+                out.writeLong(Double.doubleToLongBits(time));
+                out.writeShort((short) 0);
                 return;
             default:
                 // ignoring other types client doesn't require for now
@@ -192,7 +187,7 @@ public class Amf0Value {
                     array[i] = decode(in);
                 }
                 return array;
-            case MAP:
+            case MAP:               
             case OBJECT:
                 final int count;
                 final Map<String, Object> map;
@@ -243,7 +238,7 @@ public class Amf0Value {
                 throw new RuntimeException("unexpected type: " + type);
         }
     }
-
+    
     private static String toString(final Type type, final Object value) {
         StringBuilder sb = new StringBuilder();
         sb.append('[').append(type).append(" ");
@@ -255,5 +250,5 @@ public class Amf0Value {
         sb.append(']');
         return sb.toString();
     }
-
+    
 }

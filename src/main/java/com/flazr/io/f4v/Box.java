@@ -37,14 +37,14 @@ public class Box {
     private Payload payload;
 
     public Box(final BufferReader in, final long endPos) {
-        final int boxSize = in.readInt();
+        final long boxSize = in.readUnsignedInt();
         final byte[] typeBytes = in.readBytes(4);
         type = BoxType.parse(new String(typeBytes));        
         final long payloadSize;
         if (boxSize == 1) { // extended
             final byte[] extBytes = in.readBytes(8);
             final BigInteger bigLen = new BigInteger(1, extBytes);
-            payloadSize = bigLen.intValue() - 16;
+            payloadSize = bigLen.longValue() - 16;
         } else if (boxSize == 0) { // decided by parent bound
             payloadSize = endPos - in.position();
         } else {

@@ -26,6 +26,7 @@ import com.flazr.io.f4v.box.STSD.VideoSD;
 import com.flazr.rtmp.RtmpHeader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -38,6 +39,7 @@ public abstract class Metadata extends AbstractMessage {
     public Metadata(String name, Object... data) {
         this.name = name;
         this.data = data;
+        header.setSize(encode().readableBytes());
     }
 
     public Metadata(RtmpHeader header, ChannelBuffer in) {
@@ -57,6 +59,17 @@ public abstract class Metadata extends AbstractMessage {
             return null;
         }
         return map.get(key);
+    }
+
+    public void setValue(String key, Object value) {
+        if(data == null || data.length == 0) {
+            data = new Object[]{new LinkedHashMap<String, Object>()};
+        }
+        if(data[0] == null) {
+            data[0] = new LinkedHashMap<String, Object>();
+        }
+        final Map<String, Object> map = (Map) data[0];
+        map.put(key, value);
     }
 
     public Map<String, Object> getMap(int index) {
@@ -180,8 +193,8 @@ public abstract class Metadata extends AbstractMessage {
             );
             VideoSD video = movie.getVideoSampleDescription();
             map(map,
-                pair("width", video.getWidth()),
-                pair("height", video.getHeight()),
+                pair("width", (double) video.getWidth()),
+                pair("height", (double) video.getHeight()),
                 pair("videocodecid", sampleType)
             );
         }
